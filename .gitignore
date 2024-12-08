@@ -1,0 +1,20 @@
+# Ignorar carpetas de Vivado
+.Xil/
+trabajo1.cache/
+trabajo1.hw/
+trabajo1.sim/
+trabajo1.ip_user_files/
+
+# Ignorar archivos temporales y binarios
+*.log
+*.jou
+*.wdb
+*.pb
+*.bit
+*.bin
+
+# Ignorar otros archivos generados
+*.xpr
+*.vho
+*.unsuccessful
+
