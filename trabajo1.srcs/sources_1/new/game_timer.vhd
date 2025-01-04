@@ -42,7 +42,7 @@ begin
 
     process(clk, rst)
     begin
-        if rst = '1' then
+        if rst = '0' then
             clk_counter <= (others => '0');
             second_count <= (others => '0');
             time_up <= '0';
