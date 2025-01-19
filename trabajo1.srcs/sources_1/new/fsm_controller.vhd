@@ -19,7 +19,7 @@ entity fsm_controller is
 end fsm_controller;
 
 architecture Behavioral of fsm_controller is
-    type state_type is (INIT, LED_ON, CHECK,WAIT_NEXT_LED);            -- Estados de la FSM
+    type state_type is (INIT, LED_ON, CHECK, FINAL);            -- Estados de la FSM
     signal current_state, next_state : state_type := INIT; -- Estado actual y próximo
     signal score_internal : unsigned(7 downto 0) := (others => '0'); -- Puntuación interna
     signal next_score     : unsigned(7 downto 0) := (others => '0'); -- Puntuación temporal
@@ -32,7 +32,7 @@ begin
     -- Proceso de transición de estados y registro de puntuación
     process(clk, rst)
     begin
-        if rst = '0' then
+        if rst = '1' then
             current_state <= INIT;                       -- Reinicia al estado inicial
             score_internal <= (others => '0');           -- Reinicia la puntuación
             last_result <= '0';                          -- Reinicia el resultado
@@ -91,7 +91,7 @@ begin
 
             -- Estado CHECK: Actualiza la puntuación y resultado
             when CHECK =>
-                --led_active <= '0';
+                led_active <= '0';
                 -- Actualiza la puntuación si hubo coincidencia detectada
                 if match_detected = '1' then
                     next_score <= score_internal + 1;
@@ -99,20 +99,20 @@ begin
                 else
                     next_last_result <= '0'; -- Incorrecto
                 end if;
-
-                -- Transición a WAIT_NEXT_LED 
-                next_state <= WAIT_NEXT_LED;
-            
-            when WAIT_NEXT_LED =>
-                -- Asegura que todas las señales están en su estado base
-                led_active <= '0';
-                next_match_detected <= '0';
-                -- Transición a LED_ON si el juego no ha terminado
+                    
+                -- Transición a LED_ON o FINAL según el tiempo del juego
                 if game_time_up = '1' then
-                    next_state <= INIT;
+                    next_state <= FINAL; -- Transición al estado FINAL
                 else
-                    next_state <= LED_ON;
+                    next_state <= LED_ON; -- Regresa a LED_ON
+                    next_match_detected <= '0'; -- Reinicia coincidencia detectada
                 end if;
+            
+            -- Estado FINAL: Muestra el score final
+            when FINAL =>
+                led_active <= '0';
+                rgb_red <= "11111111";        -- LED rojo encendido indicando el fin del juego
+                next_score <= score_internal; -- Mantiene el score final
                 
             -- Estado por defecto
             when others =>
