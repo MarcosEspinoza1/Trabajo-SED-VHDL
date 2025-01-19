@@ -32,7 +32,7 @@ begin
     -- Proceso de transición de estados y registro de puntuación
     process(clk, rst)
     begin
-        if rst = '1' then
+        if rst = '0' then
             current_state <= INIT;                       -- Reinicia al estado inicial
             score_internal <= (others => '0');           -- Reinicia la puntuación
             last_result <= '0';                          -- Reinicia el resultado
