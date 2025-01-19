@@ -27,6 +27,7 @@ entity game_timer is
         clk       : in std_logic;                     -- Reloj principal
         rst       : in std_logic;                     -- Señal de reinicio global
         enable    : in std_logic;                     -- Habilita el temporizador
+        start_btn : in std_logic;                     -- Botón de inicio
         limit     : in unsigned(13 downto 0);         -- Límite en segundos
         seconds   : out unsigned(13 downto 0);        -- Tiempo transcurrido en segundos
         time_up   : out std_logic                     -- Señal de "tiempo agotado"
