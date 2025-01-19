@@ -9,6 +9,7 @@ entity top is
         rst         : in std_logic;                      -- Señal de reinicio global
         start_btn   : in std_logic;                      -- Botón para iniciar el juego
         sw          : in std_logic_vector(7 downto 0);   -- Interruptores de entrada
+        sw_mode       : in std_logic;                      -- Switch para seleccionar el modo (0: 1 segundo, 1: 2 segundos)
         leds        : out std_logic_vector(7 downto 0);  -- LEDs de salida controlados por LFSR
         anodes      : out std_logic_vector(6 downto 0);  -- Control de los anodos del display de 7 segmentos
         segments    : out std_logic_vector(6 downto 0);  -- Señales para los segmentos del display
@@ -31,7 +32,7 @@ architecture Structural of top is
     signal enable_lfsr    : std_logic;                      -- Señal de habilitación del LFSR
     signal rgb_red        : unsigned(7 downto 0);           -- Ciclo de trabajo PWM para el canal rojo
     signal rgb_green      : unsigned(7 downto 0);           -- Ciclo de trabajo PWM para el canal verde
-    signal sync_sw        : std_logic_vector(7 downto 0);   -- Señales sincronizadas de los interruptores
+    signal sw_sync        : std_logic_vector(7 downto 0);   -- Interruptores sincronizados
 
     -- Declaración de componentes utilizados
     component synchronizer
@@ -39,14 +40,6 @@ architecture Structural of top is
             clk       : in std_logic;
             async_in  : in std_logic;
             sync_out  : out std_logic
-        );
-    end component;
-
-    component synchronizer_vector
-        Port (
-            clk      : in std_logic;                     -- Reloj principal
-            async_in : in std_logic_vector(7 downto 0);  -- Señales asíncronas (interruptores)
-            sync_out : out std_logic_vector(7 downto 0)  -- Señales sincronizadas
         );
     end component;
 
@@ -101,6 +94,7 @@ architecture Structural of top is
             clk       : in std_logic;                     -- Señal de reloj
             rst       : in std_logic;                     -- Señal de reinicio
             enable    : in std_logic;                     -- Señal de habilitación
+            mode_sel  : in std_logic;                     -- Entrada para seleccionar el modo
             time_up   : out std_logic                     -- Señal que indica que el tiempo ha terminado
         );
     end component;
@@ -130,13 +124,13 @@ architecture Structural of top is
     end component;
 
 begin
-    -- Instancia del sincronizador de los interruptores (sw)
-    u_sync_sw: synchronizer_vector
-        Port map (
-            clk      => clk,
-            async_in => sw,
-            sync_out => sync_sw
-        );
+    -- Sincronización de los interruptores
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            sw_sync <= sw; -- Sincroniza los interruptores al reloj
+        end if;
+    end process;
 
     -- Instancia del sincronizador del botón de inicio
     u_sync: synchronizer
@@ -182,6 +176,7 @@ begin
             clk     => clk,
             rst     => rst,
             enable  => led_active,       -- Habilitado mientras el LED está activo
+            mode_sel  => sw_mode,        -- Conexión del switch `sw_mode` para seleccionar el modo
             time_up => topo_time_up      -- Indica tiempo agotado para el LED actual
         );
 
@@ -191,7 +186,7 @@ begin
             clk           => clk,
             rst           => rst,
             sync_btn      => edge,       -- Pulso único generado por el detector de flancos
-            sw            => sync_sw,   -- Interruptores sincronizados
+            sw            => sw_sync,    -- Conecta la señal sincronizada
             random_led    => random_led, -- Salida del LFSR
             topo_time_up  => topo_time_up, -- Tiempo agotado para el LED actual
             game_time_up  => game_time_up, -- Tiempo global agotado
